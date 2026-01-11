@@ -1,0 +1,75 @@
+<Window x:Class="Image2Text.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Image 2 Text" Height="700" Width="800" MinHeight="600" MinWidth="600"
+        Background="#F5F5F5">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock Grid.Row="0" Text="📄 Image 2 Text" FontSize="28" FontWeight="Bold" 
+                   HorizontalAlignment="Center" Margin="0,0,0,10" Foreground="#1976d2"/>
+        
+        <!-- Credits -->
+        <TextBlock Grid.Row="1" HorizontalAlignment="Center" Margin="0,0,0,20" FontSize="12">
+            <Run Text="Made by "/>
+            <Hyperlink NavigateUri="https://eeriegoesd.com/" RequestNavigate="Hyperlink_RequestNavigate">EERIE</Hyperlink>
+            <Run Text=" • "/>
+            <Hyperlink NavigateUri="https://buymeacoffee.com/eeriegoesd" RequestNavigate="Hyperlink_RequestNavigate">Buy Me a Coffee</Hyperlink>
+            <Run Text=" • Icon by "/>
+            <Hyperlink NavigateUri="https://www.freepik.com" RequestNavigate="Hyperlink_RequestNavigate">Freepik</Hyperlink>
+        </TextBlock>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
+            <Button Name="CaptureButton" Content="📸 Capture Screen Area" 
+                    Width="200" Height="45" Margin="5" FontSize="14" FontWeight="Bold"
+                    Background="#1976d2" Foreground="White" BorderThickness="0"
+                    Cursor="Hand" Click="CaptureButton_Click"/>
+            
+            <Button Name="UploadButton" Content="🖼️ Upload Image" 
+                    Width="150" Height="45" Margin="5" FontSize="14" FontWeight="Bold"
+                    Background="#1976d2" Foreground="White" BorderThickness="0"
+                    Cursor="Hand" Click="UploadButton_Click"/>
+            
+            <Button Name="ProcessButton" Content="🔍 Extract Text" 
+                    Width="150" Height="45" Margin="5" FontSize="14" FontWeight="Bold"
+                    Background="#FF9800" Foreground="White" BorderThickness="0"
+                    Cursor="Hand" Click="ProcessButton_Click"/>
+        </StackPanel>
+
+        <!-- Results -->
+        <GroupBox Grid.Row="3" Header="Extracted Text" FontSize="14" FontWeight="Bold" 
+                  BorderBrush="#CCCCCC" BorderThickness="2" Padding="10">
+            <TextBox Name="ResultTextBox" TextWrapping="Wrap" AcceptsReturn="True" 
+                     VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="13"
+                     Background="White"/>
+        </GroupBox>
+
+        <!-- Action Buttons -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,10">
+            <Button Name="CopyButton" Content="📋 Copy" Width="120" Height="40" Margin="5"
+                    Background="#2196F3" Foreground="White" BorderThickness="0"
+                    FontWeight="Bold" Cursor="Hand" Click="CopyButton_Click"/>
+            
+            <Button Name="SaveButton" Content="💾 Save as TXT" Width="120" Height="40" Margin="5"
+                    Background="#2196F3" Foreground="White" BorderThickness="0"
+                    FontWeight="Bold" Cursor="Hand" Click="SaveButton_Click"/>
+            
+            <Button Name="ClearButton" Content="🗑️ Clear" Width="120" Height="40" Margin="5"
+                    Background="#FF5722" Foreground="White" BorderThickness="0"
+                    FontWeight="Bold" Cursor="Hand" Click="ClearButton_Click"/>
+        </StackPanel>
+
+        <!-- Status -->
+        <TextBlock Grid.Row="5" Name="StatusText" Text="Ready" HorizontalAlignment="Center" 
+                   FontSize="12" Foreground="#666666"/>
+    </Grid>
+</Window>

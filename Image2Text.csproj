@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<UseWPF>true</UseWPF>
+		<AssemblyName>Image2Text</AssemblyName>
+		<RootNamespace>Image2Text</RootNamespace>
+		<Platforms>x64;x86;ARM64</Platforms>
+		<Version>1.0.0</Version>
+		<Authors>EERIE</Authors>
+		<Product>Image2Text OCR</Product>
+
+		<!-- Fix DPIAwarenessValidation -->
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Tesseract" Version="5.2.0" />
+		<PackageReference Include="System.Drawing.Common" Version="8.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="tessdata\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+</Project>
