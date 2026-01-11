@@ -6,11 +6,12 @@ Simple native Windows application for converting images to text using OCR.
 - .NET 8.0 SDK
 - Tesseract Language Data
   
-Tesseract Language Data:**
+**Tesseract Language Data:**
    - Create folder: `tessdata` in project root
    - Download `eng.traineddata` from: https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata
    - Place it in `tessdata/` folder
 
+**Features:**
 - **Screen Area Capture** - Click and drag ANY area of your screen (works outside app)
 - **Upload Images** - Supports JPG, PNG, BMP, GIF, TIFF
 - **Extract Text** - Uses Tesseract OCR
@@ -21,3 +22,4 @@ Tesseract Language Data:**
 ## 👤 Feedback
 
 Made by EERIE - https://eeriegoesd.com/
+Feedback - eeriegoesd@gmail.com
