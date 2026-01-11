@@ -1,0 +1,2 @@
+This product includes language data for Tesseract OCR (eng.traineddata).
+Tesseract OCR and associated language data are distributed under the Apache License 2.0.
