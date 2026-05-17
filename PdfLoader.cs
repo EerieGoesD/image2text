@@ -13,6 +13,7 @@ namespace Image2Text
     //    PDFs). Text is taken straight from the PDF, OCR is skipped entirely.
     //  - !HasNativeText: page is image-only (scan, screenshot in PDF wrapper).
     //    Bitmap is rendered at OCR-friendly DPI so the caller can OCR it.
+    //    The caller owns the Bitmap and must dispose it.
     public record PdfPage(int Index, bool HasNativeText, string Text, Bitmap? Bitmap);
 
     public static class PdfLoader
@@ -30,12 +31,12 @@ namespace Image2Text
             return docReader.GetPageCount();
         }
 
-        // Read every page. Pages with an embedded text layer return the text
-        // directly (no rendering, no OCR). Pages without text get rendered to
-        // a bitmap so the caller can OCR them.
-        public static List<PdfPage> ExtractPages(string pdfPath, double scaleFactor = DefaultScale)
+        // Yields pages one at a time so callers can process and dispose each
+        // page's bitmap before the next is rendered. A 200-page scanned PDF at
+        // scaleFactor 4 is ~30 GB if held in memory at once; streaming keeps
+        // peak memory to a single page.
+        public static IEnumerable<PdfPage> StreamPages(string pdfPath, double scaleFactor = DefaultScale)
         {
-            var pages = new List<PdfPage>();
             using var docReader = DocLib.Instance.GetDocReader(pdfPath, new PageDimensions(scaleFactor));
             int count = docReader.GetPageCount();
             for (int i = 0; i < count; i++)
@@ -52,9 +53,8 @@ namespace Image2Text
                     byte[] raw = pageReader.GetImage();
                     bmp = BytesToBitmap(raw, w, h);
                 }
-                pages.Add(new PdfPage(i, hasNative, text, bmp));
+                yield return new PdfPage(i, hasNative, text, bmp);
             }
-            return pages;
         }
 
         // Docnet returns BGRA bytes; copy them into a managed Bitmap.

@@ -619,13 +619,20 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0" x:Name="StatusText" Text="Ready"
                            FontFamily="{StaticResource MonoFont}" FontSize="12"
                            Foreground="{StaticResource TextDimBrush}" VerticalAlignment="Center"/>
 
-                <TextBlock Grid.Column="1" FontSize="12" VerticalAlignment="Center">
+                <Button Grid.Column="1" x:Name="CancelButton" Content="⛔  Cancel"
+                        Style="{StaticResource DangerButton}"
+                        Click="CancelButton_Click" Padding="10,4" FontSize="11"
+                        Visibility="Collapsed" Margin="0,0,16,0"
+                        ToolTip="Stop the current OCR job after the current page finishes."/>
+
+                <TextBlock Grid.Column="2" FontSize="12" VerticalAlignment="Center">
                     <Run Text="Made by" Foreground="{StaticResource TextDimBrush}"/>
                     <Hyperlink NavigateUri="https://eeriegoesd.com"
                                Foreground="{StaticResource AccentHBrush}"

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -191,64 +192,121 @@ namespace Image2Text
         {
             SetStatus("Reading PDF...");
             Logger.Event($"PDF load start: {pdfPath}");
-
-            var pages = await Task.Run(() => PdfLoader.ExtractPages(pdfPath));
-            int nativeCount = pages.Count(p => p.HasNativeText);
-            int ocrCount = pages.Count - nativeCount;
-            Logger.Info($"PDF read: {pages.Count} pages | {nativeCount} native-text | {ocrCount} need OCR");
-            if (pages.Count == 0)
-            {
-                SetStatus("PDF has no pages.");
-                return;
-            }
-
             string filename = Path.GetFileName(pdfPath);
+
+            int totalPages = await Task.Run(() => PdfLoader.GetPageCount(pdfPath));
+            if (totalPages == 0) { SetStatus("PDF has no pages."); return; }
+
+            BeginCancellableJob();
+            var ct = currentCts!.Token;
+            var psm = ParsePsm(settings.PsmMode);
+            bool enhance = settings.AutoEnhance;
+
             var allText = new StringBuilder();
-            float ocrConfSum = 0; int ocrConfCount = 0;
+            int nativeCount = 0, ocrCount = 0;
+            float ocrConfSum = 0;
+            bool cancelled = false;
 
-            for (int i = 0; i < pages.Count; i++)
+            try
             {
-                var page = pages[i];
-                int pageNum = i + 1;
-                allText.AppendLine($"--- Page {pageNum} ---");
-
-                if (page.HasNativeText)
+                await Task.Run(() =>
                 {
-                    Logger.Info($"page {pageNum}: native text ({page.Text.Length} chars), skipping OCR");
-                    SetStatus($"Page {pageNum}/{pages.Count}: native text");
-                    allText.AppendLine(page.Text.Trim());
-                }
-                else if (page.Bitmap != null)
-                {
-                    using var bmp = page.Bitmap;
-                    currentImage?.Dispose();
-                    currentImage = (Bitmap)bmp.Clone();
-                    currentSourceLabel = $"{filename}  •  page {pageNum}/{pages.Count}  •  {bmp.Width}×{bmp.Height}";
-                    UpdateSourceLabel();
-                    SetStatus($"OCR page {pageNum}/{pages.Count}...");
+                    foreach (var page in PdfLoader.StreamPages(pdfPath))
+                    {
+                        if (ct.IsCancellationRequested)
+                        {
+                            page.Bitmap?.Dispose();
+                            cancelled = true;
+                            break;
+                        }
 
-                    var result = await RunOcrAsync(bmp);
-                    allText.AppendLine(result.PlainText.Trim());
-                    ocrConfSum += result.MeanConfidence;
-                    ocrConfCount++;
-                    AddHistoryEntry((Bitmap)bmp.Clone(), result, $"{filename} · page {pageNum}");
-                }
+                        int pageNum = page.Index + 1;
+                        allText.AppendLine($"--- Page {pageNum} ---");
 
-                allText.AppendLine();
+                        if (page.HasNativeText)
+                        {
+                            Logger.Info($"page {pageNum}: native text ({page.Text.Length} chars), skipping OCR");
+                            Dispatcher.Invoke(() => SetStatus($"Page {pageNum}/{totalPages}: native text"));
+                            allText.AppendLine(page.Text.Trim());
+                            nativeCount++;
+                        }
+                        else if (page.Bitmap != null)
+                        {
+                            using var bmp = page.Bitmap;
+                            var clonedForUi = (Bitmap)bmp.Clone();
+                            Dispatcher.Invoke(() =>
+                            {
+                                currentImage?.Dispose();
+                                currentImage = clonedForUi;
+                                currentSourceLabel = $"{filename}  •  page {pageNum}/{totalPages}  •  {bmp.Width}×{bmp.Height}";
+                                UpdateSourceLabel();
+                                SetStatus($"OCR page {pageNum}/{totalPages}...");
+                            });
+
+                            var result = RunOcrSync(bmp, psm, enhance);
+                            allText.AppendLine(result.PlainText.Trim());
+                            ocrConfSum += result.MeanConfidence;
+                            ocrCount++;
+
+                            var clonedForHistory = (Bitmap)bmp.Clone();
+                            Dispatcher.Invoke(() => AddHistoryEntry(clonedForHistory, result, $"{filename} · page {pageNum}"));
+                        }
+
+                        allText.AppendLine();
+                    }
+                }, ct);
             }
+            catch (OperationCanceledException) { cancelled = true; }
+            finally { EndCancellableJob(); }
 
             ResultTextBox.Text = allText.ToString().TrimEnd();
-            string summary = ocrCount == 0
-                ? $"Done  •  {pages.Count} pages (all native text, no OCR needed)"
-                : nativeCount == 0
-                    ? $"Done  •  {pages.Count} pages  •  avg confidence {ocrConfSum / ocrConfCount * 100:F1}%"
-                    : $"Done  •  {nativeCount} native + {ocrCount} OCR  •  OCR conf {ocrConfSum / ocrConfCount * 100:F1}%";
+            string summary;
+            if (cancelled)
+            {
+                summary = $"Cancelled  •  {nativeCount + ocrCount}/{totalPages} pages processed";
+            }
+            else if (ocrCount == 0)
+            {
+                summary = $"Done  •  {totalPages} pages (all native text, no OCR needed)";
+            }
+            else if (nativeCount == 0)
+            {
+                summary = $"Done  •  {totalPages} pages  •  avg confidence {ocrConfSum / ocrCount * 100:F1}%";
+            }
+            else
+            {
+                summary = $"Done  •  {nativeCount} native + {ocrCount} OCR  •  OCR conf {ocrConfSum / ocrCount * 100:F1}%";
+            }
             SetStatus(summary);
-            Logger.Event($"PDF complete: {nativeCount} native + {ocrCount} OCR");
+            Logger.Event($"PDF complete: {nativeCount} native + {ocrCount} OCR | cancelled={cancelled}");
         }
 
         private OcrResult? lastResult;
         private bool isProcessing;
+        private CancellationTokenSource? currentCts;
+
+        private void BeginCancellableJob()
+        {
+            currentCts?.Cancel();
+            currentCts?.Dispose();
+            currentCts = new CancellationTokenSource();
+            CancelButton.Visibility = Visibility.Visible;
+        }
+
+        private void EndCancellableJob()
+        {
+            currentCts?.Dispose();
+            currentCts = null;
+            CancelButton.Visibility = Visibility.Collapsed;
+        }
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (currentCts == null) return;
+            Logger.Warn("user cancelled current job");
+            currentCts.Cancel();
+            SetStatus("Cancelling...");
+        }
 
         private async void ReExtractButton_Click(object sender, RoutedEventArgs e)
         {
@@ -257,41 +315,42 @@ namespace Image2Text
             await ProcessImage();
         }
 
-        private async Task<OcrResult> RunOcrAsync(Bitmap srcImage)
+        private OcrResult RunOcrSync(Bitmap srcImage, PageSegMode psm, bool enhance)
+        {
+            Bitmap? processed = null;
+            try
+            {
+                Bitmap toOcr = srcImage;
+                if (enhance)
+                {
+                    processed = ImagePreprocessor.Enhance(srcImage);
+                    toOcr = processed;
+                }
+
+                using var ms = new MemoryStream();
+                toOcr.Save(ms, ImageFormat.Png);
+                byte[] imageBytes = ms.ToArray();
+
+                using var pix = Pix.LoadFromMemory(imageBytes);
+                using var page = ocrEngine!.Process(pix, psm);
+                return BuildResult(page, srcImage.Width, srcImage.Height);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"OCR engine threw: {ex.Message}");
+                return new OcrResult { PlainText = $"Error: {ex.Message}" };
+            }
+            finally
+            {
+                processed?.Dispose();
+            }
+        }
+
+        private Task<OcrResult> RunOcrAsync(Bitmap srcImage)
         {
             var psm = ParsePsm(settings.PsmMode);
             bool enhance = settings.AutoEnhance;
-
-            return await Task.Run(() =>
-            {
-                Bitmap? processed = null;
-                try
-                {
-                    Bitmap toOcr = srcImage;
-                    if (enhance)
-                    {
-                        processed = ImagePreprocessor.Enhance(srcImage);
-                        toOcr = processed;
-                    }
-
-                    using var ms = new MemoryStream();
-                    toOcr.Save(ms, ImageFormat.Png);
-                    byte[] imageBytes = ms.ToArray();
-
-                    using var pix = Pix.LoadFromMemory(imageBytes);
-                    using var page = ocrEngine!.Process(pix, psm);
-                    return BuildResult(page, srcImage.Width, srcImage.Height);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error($"OCR engine threw: {ex.Message}");
-                    return new OcrResult { PlainText = $"Error: {ex.Message}" };
-                }
-                finally
-                {
-                    processed?.Dispose();
-                }
-            });
+            return Task.Run(() => RunOcrSync(srcImage, psm, enhance));
         }
 
         private async Task ProcessImage()
@@ -889,66 +948,95 @@ namespace Image2Text
             if (pending.Count == 0) { SetStatus("Nothing pending in the batch."); return; }
 
             BatchRunBtn.IsEnabled = false;
+            BeginCancellableJob();
+            var ct = currentCts!.Token;
+            var psm = ParsePsm(settings.PsmMode);
+            bool enhance = settings.AutoEnhance;
             Logger.Event($"batch run | {pending.Count} items");
 
-            foreach (var item in pending)
+            int doneItems = 0;
+            try
             {
-                item.Status = BatchItemStatus.Processing;
-                UpdateBatchStatus();
-                try
+                foreach (var item in pending)
                 {
-                    if (PdfLoader.IsPdf(item.Path))
+                    if (ct.IsCancellationRequested) break;
+                    item.Status = BatchItemStatus.Processing;
+                    UpdateBatchStatus();
+                    SetStatus($"Batch  •  {doneItems + 1}/{pending.Count}  •  {item.Filename}");
+                    try
                     {
-                        var pages = await Task.Run(() => PdfLoader.ExtractPages(item.Path));
-                        var sb = new StringBuilder();
-                        float ocrConfSum = 0; int ocrConfCount = 0; int nativeCount = 0;
-                        foreach (var page in pages)
+                        if (PdfLoader.IsPdf(item.Path))
                         {
-                            if (page.HasNativeText)
+                            var sb = new StringBuilder();
+                            float ocrConfSum = 0; int ocrConfCount = 0; int nativeCount = 0;
+                            bool itemCancelled = false;
+                            await Task.Run(() =>
                             {
-                                sb.AppendLine(page.Text.Trim());
-                                nativeCount++;
-                            }
-                            else if (page.Bitmap != null)
+                                foreach (var page in PdfLoader.StreamPages(item.Path))
+                                {
+                                    if (ct.IsCancellationRequested)
+                                    {
+                                        page.Bitmap?.Dispose();
+                                        itemCancelled = true;
+                                        break;
+                                    }
+                                    if (page.HasNativeText)
+                                    {
+                                        sb.AppendLine(page.Text.Trim());
+                                        nativeCount++;
+                                    }
+                                    else if (page.Bitmap != null)
+                                    {
+                                        using var bmp = page.Bitmap;
+                                        var r = RunOcrSync(bmp, psm, enhance);
+                                        sb.AppendLine(r.PlainText.Trim());
+                                        ocrConfSum += r.MeanConfidence;
+                                        ocrConfCount++;
+                                    }
+                                    sb.AppendLine();
+                                }
+                            }, ct);
+                            if (itemCancelled) { item.Status = BatchItemStatus.Failed; UpdateBatchStatus(); break; }
+                            int totalPages = nativeCount + ocrConfCount;
+                            Logger.Info($"batch PDF {item.Filename}: {nativeCount} native + {ocrConfCount} OCR");
+                            item.Result = new OcrResult
                             {
-                                using var bmp = page.Bitmap;
-                                var r = await RunOcrAsync(bmp);
-                                sb.AppendLine(r.PlainText.Trim());
-                                ocrConfSum += r.MeanConfidence;
-                                ocrConfCount++;
-                            }
-                            sb.AppendLine();
+                                PlainText = sb.ToString().TrimEnd(),
+                                // Native-text pages report as 100% confidence so the
+                                // batch row average is meaningful even with mixed input.
+                                MeanConfidence = totalPages > 0
+                                    ? (ocrConfSum + nativeCount) / totalPages
+                                    : 0,
+                            };
                         }
-                        Logger.Info($"batch PDF {item.Filename}: {nativeCount} native + {ocrConfCount} OCR");
-                        item.Result = new OcrResult
+                        else
                         {
-                            PlainText = sb.ToString().TrimEnd(),
-                            // Native-text pages report as 100% confidence so the
-                            // batch row average is meaningful even with mixed input.
-                            MeanConfidence = pages.Count > 0
-                                ? (ocrConfSum + nativeCount) / pages.Count
-                                : 0,
-                        };
+                            using var bmp = new Bitmap(item.Path);
+                            item.Result = await Task.Run(() => RunOcrSync(bmp, psm, enhance), ct);
+                        }
+                        item.Confidence = item.Result.MeanConfidence;
+                        item.Status = BatchItemStatus.Done;
+                        doneItems++;
+                        Logger.Info($"batch item done: {item.Filename}  conf {item.Confidence * 100:F1}%");
                     }
-                    else
+                    catch (OperationCanceledException) { item.Status = BatchItemStatus.Failed; UpdateBatchStatus(); break; }
+                    catch (Exception ex)
                     {
-                        using var bmp = new Bitmap(item.Path);
-                        item.Result = await RunOcrAsync(bmp);
+                        item.Status = BatchItemStatus.Failed;
+                        Logger.Error($"batch item failed: {item.Filename}  {ex.Message}");
                     }
-                    item.Confidence = item.Result.MeanConfidence;
-                    item.Status = BatchItemStatus.Done;
-                    Logger.Info($"batch item done: {item.Filename}  conf {item.Confidence * 100:F1}%");
+                    UpdateBatchStatus();
                 }
-                catch (Exception ex)
-                {
-                    item.Status = BatchItemStatus.Failed;
-                    Logger.Error($"batch item failed: {item.Filename}  {ex.Message}");
-                }
-                UpdateBatchStatus();
             }
-
-            BatchRunBtn.IsEnabled = true;
-            Logger.Event($"batch run finished");
+            finally
+            {
+                BatchRunBtn.IsEnabled = true;
+                EndCancellableJob();
+                Logger.Event($"batch run finished | {doneItems}/{pending.Count} done");
+                SetStatus(ct.IsCancellationRequested
+                    ? $"Cancelled  •  {doneItems}/{pending.Count} done"
+                    : $"Batch complete  •  {doneItems}/{pending.Count} done");
+            }
         }
 
         private void BatchSaveAll_Click(object sender, RoutedEventArgs e)

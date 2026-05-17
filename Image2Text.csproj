@@ -30,5 +30,17 @@
 		<None Update="tessdata\**\*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<None Update="LICENSES\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
+
+	<!-- Auto-download eng.traineddata (Apache 2.0, github.com/tesseract-ocr/tessdata)
+	     if it's missing locally, so fresh clones and CI builds get a complete package. -->
+	<Target Name="EnsureTessdata" BeforeTargets="BeforeBuild" Condition="!Exists('tessdata/eng.traineddata')">
+		<Message Text="tessdata/eng.traineddata missing, downloading from tesseract-ocr/tessdata (Apache 2.0)..." Importance="high" />
+		<MakeDir Directories="tessdata" />
+		<DownloadFile SourceUrl="https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata"
+		              DestinationFolder="tessdata" />
+	</Target>
 </Project>
