@@ -1,25 +1,16 @@
-# Image 2 Text - Windows Desktop App (WPF)
-Simple native Windows application for converting images to text using OCR.
+# Image 2 Text
 
-### Requirements:
-- Visual Studio 2022 (Community edition is free)
-- .NET 8.0 SDK
-- Tesseract Language Data
-  
-**Tesseract Language Data:**
-   - Create folder: `tessdata` in project root
-   - Download `eng.traineddata` from: https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata
-   - Place it in `tessdata/` folder
+A simple offline OCR tool for Windows. Capture any region of your screen or open an image file and pull out the text inside it.
 
-**Features:**
-- **Screen Area Capture** - Click and drag ANY area of your screen (works outside app)
-- **Upload Images** - Supports JPG, PNG, BMP, GIF, TIFF
-- **Extract Text** - Uses Tesseract OCR
-- **Copy to Clipboard**
-- **Save as TXT file**
-- Fully native Windows app
+## What it does
 
-## 👤 Feedback
+- **Screen Area Capture** - click and drag across any region of your screen, including multi-monitor setups.
+- **Image Upload** - opens JPG, PNG, BMP, GIF, and TIFF files.
+- **Offline OCR** - powered by Tesseract, runs locally with no network calls.
+- **Copy to Clipboard** - one click sends the extracted text to your clipboard.
+- **Save as TXT** - export results to a timestamped text file.
+- **Dark Theme** - native dark title bar and indigo accent UI on Windows 10/11.
 
-Made by EERIE - https://eeriegoesd.com/
-Feedback - eeriegoesd@gmail.com
+---
+
+Made by [EERIE](https://eeriegoesd.com) | [Support This Project](https://buymeacoffee.com/eeriegoesd) | [Report Issue](https://github.com/EerieGoesD/image2text/issues/new?template=bug-report.md) | [Feedback](https://github.com/EerieGoesD/image2text/discussions) | [Suggest Feature](https://github.com/EerieGoesD/image2text/issues/new?template=feature-request.md)

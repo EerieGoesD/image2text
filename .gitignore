@@ -11,6 +11,9 @@
 *.sln.docstates
 *.env
 
+# Tesseract language data (downloaded separately, ~22 MB)
+tessdata/*.traineddata
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

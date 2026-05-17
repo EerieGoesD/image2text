@@ -1,75 +1,668 @@
 <Window x:Class="Image2Text.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Image 2 Text" Height="700" Width="800" MinHeight="600" MinWidth="600"
-        Background="#F5F5F5">
-    <Grid Margin="20">
+        Title="Image 2 Text"
+        Icon="pack://application:,,,/icon.ico"
+        Height="720" Width="980"
+        MinHeight="540" MinWidth="720"
+        Background="{StaticResource BgBrush}"
+        Foreground="{StaticResource TextBrush}"
+        FontFamily="{StaticResource SansFont}"
+        FontSize="13"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Title -->
-        <TextBlock Grid.Row="0" Text="📄 Image 2 Text" FontSize="28" FontWeight="Bold" 
-                   HorizontalAlignment="Center" Margin="0,0,0,10" Foreground="#1976d2"/>
-        
-        <!-- Credits -->
-        <TextBlock Grid.Row="1" HorizontalAlignment="Center" Margin="0,0,0,20" FontSize="12">
-            <Run Text="Made by "/>
-            <Hyperlink NavigateUri="https://eeriegoesd.com/" RequestNavigate="Hyperlink_RequestNavigate">EERIE</Hyperlink>
-            <Run Text=" • "/>
-            <Hyperlink NavigateUri="https://buymeacoffee.com/eeriegoesd" RequestNavigate="Hyperlink_RequestNavigate">Buy Me a Coffee</Hyperlink>
-            <Run Text=" • Icon by "/>
-            <Hyperlink NavigateUri="https://www.freepik.com" RequestNavigate="Hyperlink_RequestNavigate">Freepik</Hyperlink>
-        </TextBlock>
+        <!-- ===== MAIN LAYOUT ===== -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-        <!-- Buttons -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
-            <Button Name="CaptureButton" Content="📸 Capture Screen Area" 
-                    Width="200" Height="45" Margin="5" FontSize="14" FontWeight="Bold"
-                    Background="#1976d2" Foreground="White" BorderThickness="0"
-                    Cursor="Hand" Click="CaptureButton_Click"/>
-            
-            <Button Name="UploadButton" Content="🖼️ Upload Image" 
-                    Width="150" Height="45" Margin="5" FontSize="14" FontWeight="Bold"
-                    Background="#1976d2" Foreground="White" BorderThickness="0"
-                    Cursor="Hand" Click="UploadButton_Click"/>
-            
-            <Button Name="ProcessButton" Content="🔍 Extract Text" 
-                    Width="150" Height="45" Margin="5" FontSize="14" FontWeight="Bold"
-                    Background="#FF9800" Foreground="White" BorderThickness="0"
-                    Cursor="Hand" Click="ProcessButton_Click"/>
-        </StackPanel>
+            <!-- ===== SIDEBAR ===== -->
+            <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+                <DockPanel LastChildFill="False">
 
-        <!-- Results -->
-        <GroupBox Grid.Row="3" Header="Extracted Text" FontSize="14" FontWeight="Bold" 
-                  BorderBrush="#CCCCCC" BorderThickness="2" Padding="10">
-            <TextBox Name="ResultTextBox" TextWrapping="Wrap" AcceptsReturn="True" 
-                     VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="13"
-                     Background="White"/>
-        </GroupBox>
+                    <!-- App Title -->
+                    <Border DockPanel.Dock="Top" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="0,0,0,1" Padding="14,16">
+                        <StackPanel Orientation="Horizontal">
+                            <Viewbox Width="22" Height="22" Margin="0,0,9,0">
+                                <Canvas Width="24" Height="24">
+                                    <Path Stroke="{StaticResource AccentHBrush}" StrokeThickness="1.8"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Data="M5 3 H14 L19 8 V20 A1 1 0 0 1 18 21 H5 A1 1 0 0 1 4 20 V4 A1 1 0 0 1 5 3 Z M14 3 V8 H19"/>
+                                    <Path Stroke="{StaticResource AccentHBrush}" StrokeThickness="1.8"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                          Data="M7 12 H14 M7 15 H13 M7 18 H11"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Image 2 Text" FontSize="14" FontWeight="Bold"
+                                       Foreground="{StaticResource AccentHBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
 
-        <!-- Action Buttons -->
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,10">
-            <Button Name="CopyButton" Content="📋 Copy" Width="120" Height="40" Margin="5"
-                    Background="#2196F3" Foreground="White" BorderThickness="0"
-                    FontWeight="Bold" Cursor="Hand" Click="CopyButton_Click"/>
-            
-            <Button Name="SaveButton" Content="💾 Save as TXT" Width="120" Height="40" Margin="5"
-                    Background="#2196F3" Foreground="White" BorderThickness="0"
-                    FontWeight="Bold" Cursor="Hand" Click="SaveButton_Click"/>
-            
-            <Button Name="ClearButton" Content="🗑️ Clear" Width="120" Height="40" Margin="5"
-                    Background="#FF5722" Foreground="White" BorderThickness="0"
-                    FontWeight="Bold" Cursor="Hand" Click="ClearButton_Click"/>
-        </StackPanel>
+                    <!-- Nav items -->
+                    <StackPanel DockPanel.Dock="Top" Margin="0,8,0,0">
+                        <Border x:Name="NavExtract" Tag="extract" Background="#246366F1" CornerRadius="8"
+                                Margin="8,1" Padding="12,8" Cursor="Hand"
+                                MouseEnter="Nav_MouseEnter" MouseLeave="Nav_MouseLeave"
+                                MouseDown="Nav_MouseDown">
+                            <StackPanel Orientation="Horizontal">
+                                <Viewbox Width="15" Height="15" Margin="0,0,9,0">
+                                    <Canvas Width="16" Height="16">
+                                        <Path Stroke="{StaticResource AccentHBrush}" StrokeThickness="1.5"
+                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                              Data="M3 2 H9 L13 6 V13 A1 1 0 0 1 12 14 H3 A1 1 0 0 1 2 13 V3 A1 1 0 0 1 3 2 Z M9 2 V6 H13"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="Extract" Foreground="{StaticResource AccentHBrush}"
+                                           FontWeight="Medium" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
 
-        <!-- Status -->
-        <TextBlock Grid.Row="5" Name="StatusText" Text="Ready" HorizontalAlignment="Center" 
-                   FontSize="12" Foreground="#666666"/>
+                        <Border x:Name="NavBatch" Tag="batch" Background="Transparent" CornerRadius="8"
+                                Margin="8,1" Padding="12,8" Cursor="Hand"
+                                MouseEnter="Nav_MouseEnter" MouseLeave="Nav_MouseLeave"
+                                MouseDown="Nav_MouseDown">
+                            <StackPanel Orientation="Horizontal">
+                                <Viewbox Width="15" Height="15" Margin="0,0,9,0">
+                                    <Canvas Width="16" Height="16">
+                                        <Path Stroke="{StaticResource TextDimBrush}" StrokeThickness="1.5"
+                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                              Data="M2 3 H7 V7 H2 Z M9 3 H14 V7 H9 Z M2 9 H7 V13 H2 Z M9 9 H14 V13 H9 Z"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="Batch"
+                                           Foreground="{StaticResource TextDimBrush}"
+                                           FontWeight="Medium" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border x:Name="NavHistory" Tag="history" Background="Transparent" CornerRadius="8"
+                                Margin="8,1" Padding="12,8" Cursor="Hand"
+                                MouseEnter="Nav_MouseEnter" MouseLeave="Nav_MouseLeave"
+                                MouseDown="Nav_MouseDown">
+                            <StackPanel Orientation="Horizontal">
+                                <Viewbox Width="15" Height="15" Margin="0,0,9,0">
+                                    <Canvas Width="16" Height="16">
+                                        <Path Stroke="{StaticResource TextDimBrush}" StrokeThickness="1.5"
+                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" Fill="Transparent"
+                                              Data="M8 1.5 A6.5 6.5 0 1 0 8 14.5 A6.5 6.5 0 1 0 8 1.5 Z M8 4.5 V8 L10.5 9.5"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="History"
+                                           Foreground="{StaticResource TextDimBrush}"
+                                           FontWeight="Medium" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border x:Name="NavSettings" Tag="settings" Background="Transparent" CornerRadius="8"
+                                Margin="8,1" Padding="12,8" Cursor="Hand"
+                                MouseEnter="Nav_MouseEnter" MouseLeave="Nav_MouseLeave"
+                                MouseDown="Nav_MouseDown">
+                            <StackPanel Orientation="Horizontal">
+                                <Viewbox Width="15" Height="15" Margin="0,0,9,0">
+                                    <Canvas Width="16" Height="16">
+                                        <Path Stroke="{StaticResource TextDimBrush}" StrokeThickness="1.5"
+                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                              Data="M8 5.5 A2.5 2.5 0 1 0 8 10.5 A2.5 2.5 0 1 0 8 5.5 Z M8 1.5 V3.5 M8 12.5 V14.5 M1.5 8 H3.5 M12.5 8 H14.5 M3.4 3.4 L4.8 4.8 M11.2 11.2 L12.6 12.6 M3.4 12.6 L4.8 11.2 M11.2 4.8 L12.6 3.4"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="Settings"
+                                           Foreground="{StaticResource TextDimBrush}"
+                                           FontWeight="Medium" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border x:Name="NavAbout" Tag="about" Background="Transparent" CornerRadius="8"
+                                Margin="8,1" Padding="12,8" Cursor="Hand"
+                                MouseEnter="Nav_MouseEnter" MouseLeave="Nav_MouseLeave"
+                                MouseDown="Nav_MouseDown">
+                            <StackPanel Orientation="Horizontal">
+                                <Viewbox Width="15" Height="15" Margin="0,0,9,0">
+                                    <Canvas Width="16" Height="16">
+                                        <Path Stroke="{StaticResource TextDimBrush}" StrokeThickness="1.5"
+                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                              Data="M8 1.5 A6.5 6.5 0 1 0 8 14.5 A6.5 6.5 0 1 0 8 1.5 Z M8 7 V11 M8 5 V5.1"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="About"
+                                           Foreground="{StaticResource TextDimBrush}"
+                                           FontWeight="Medium" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border x:Name="NavDebug" Tag="debug" Background="Transparent" CornerRadius="8"
+                                Margin="8,1" Padding="12,8" Cursor="Hand" Visibility="Collapsed"
+                                MouseEnter="Nav_MouseEnter" MouseLeave="Nav_MouseLeave"
+                                MouseDown="Nav_MouseDown">
+                            <StackPanel Orientation="Horizontal">
+                                <Viewbox Width="15" Height="15" Margin="0,0,9,0">
+                                    <Canvas Width="16" Height="16">
+                                        <Path Stroke="{StaticResource TextDimBrush}" StrokeThickness="1.5"
+                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                              Data="M4 2 L5 5 M12 2 L11 5 M3 7 H13 M5 7 V11 A3 3 0 0 0 11 11 V7 M2 10 H4 M12 10 H14"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Text="Debug"
+                                           Foreground="{StaticResource TextDimBrush}"
+                                           FontWeight="Medium" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                </DockPanel>
+            </Border>
+
+            <!-- ===== PANELS ===== -->
+            <Grid Grid.Column="1">
+
+                <!-- ===== EXTRACT PANEL ===== -->
+                <Grid x:Name="ExtractPanel">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                            Padding="20,16">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="📸  Capture Screen Area" Style="{StaticResource AccentButton}"
+                                    Click="CaptureButton_Click" Margin="0,0,8,0" MinWidth="190"/>
+                            <Button Content="🖼  Upload Image/Document" Style="{StaticResource AccentButton}"
+                                    Click="UploadButton_Click" Margin="0,0,8,0" MinWidth="210"/>
+                            <Button x:Name="ReExtractButton" Content="🔄  Re-extract"
+                                    Style="{StaticResource GhostButton}"
+                                    Click="ReExtractButton_Click" MinWidth="130"
+                                    ToolTip="Re-run OCR on the current image with the latest Settings (Page Layout, Auto-enhance)."/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" Padding="20,10,20,6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="EXTRACTED TEXT" FontSize="10.5" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextDimBrush}"/>
+                            <TextBlock Text="  •  " Foreground="{StaticResource BorderBrush}"/>
+                            <TextBlock x:Name="SourceLabel" Text="no image loaded"
+                                       FontFamily="{StaticResource MonoFont}" FontSize="11"
+                                       Foreground="{StaticResource TextDimBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="2" Margin="20,0,20,12" CornerRadius="10"
+                            Background="{StaticResource SurfaceBrush}"
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                        <Grid>
+                            <TextBox x:Name="ResultTextBox" TextWrapping="Wrap" AcceptsReturn="True"
+                                     VerticalScrollBarVisibility="Auto"
+                                     Background="Transparent" BorderThickness="0"/>
+                            <TextBlock x:Name="ResultPlaceholder"
+                                       Text="Capture a screen area or upload an image to extract text."
+                                       Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="13" FontStyle="Italic"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       IsHitTestVisible="False"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="3" Padding="20,8,20,16">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="📋  Copy" Style="{StaticResource GhostButton}"
+                                    Click="CopyButton_Click" Margin="0,0,8,0" MinWidth="110"/>
+
+                            <Grid Margin="0,0,8,0">
+                                <ToggleButton x:Name="SaveToggle" Style="{StaticResource ExportButton}"
+                                              Content="💾  Save ↑" Padding="14,8"/>
+                                <Popup PlacementTarget="{Binding ElementName=SaveToggle}"
+                                       Placement="Top" StaysOpen="False" AllowsTransparency="True"
+                                       IsOpen="{Binding IsChecked, ElementName=SaveToggle, Mode=TwoWay}">
+                                    <Border Background="{StaticResource Surface2Brush}"
+                                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                            CornerRadius="10" MinWidth="180" Margin="0,0,0,4">
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.5"/>
+                                        </Border.Effect>
+                                        <StackPanel>
+                                            <Button Content="Save as TXT" Style="{StaticResource ExportMenuItem}" Click="SaveTxt_Click"/>
+                                            <Border Height="1" Background="{StaticResource BorderBrush}"/>
+                                            <Button Content="Save as Markdown" Style="{StaticResource ExportMenuItem}" Click="SaveMd_Click"/>
+                                            <Border Height="1" Background="{StaticResource BorderBrush}"/>
+                                            <Button Content="Save as JSON (with confidences)" Style="{StaticResource ExportMenuItem}" Click="SaveJson_Click"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+
+                            <Button Content="🗑  Clear" Style="{StaticResource DangerButton}"
+                                    Click="ClearButton_Click" MinWidth="100"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- ===== BATCH PANEL ===== -->
+                <Grid x:Name="BatchPanel" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                            Padding="20,16">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="📁  Add Files" Style="{StaticResource AccentButton}"
+                                    Click="BatchAdd_Click" Margin="0,0,8,0" MinWidth="140"/>
+                            <Button x:Name="BatchRunBtn" Content="▶  Run Batch" Style="{StaticResource GhostButton}"
+                                    Click="BatchRun_Click" Margin="0,0,8,0" MinWidth="130"/>
+                            <Button x:Name="BatchSaveAllBtn" Content="💾  Save All as TXT" Style="{StaticResource GhostButton}"
+                                    Click="BatchSaveAll_Click" Margin="0,0,8,0" MinWidth="160"/>
+                            <Button Content="🗑  Clear" Style="{StaticResource DangerButton}"
+                                    Click="BatchClear_Click" MinWidth="100"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" Padding="20,10,20,6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="BATCH QUEUE" FontSize="10.5" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextDimBrush}"/>
+                            <TextBlock Text="  •  " Foreground="{StaticResource BorderBrush}"/>
+                            <TextBlock x:Name="BatchStatus"
+                                       FontFamily="{StaticResource MonoFont}" FontSize="11"
+                                       Foreground="{StaticResource TextDimBrush}" Text="empty"/>
+                        </StackPanel>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="20,0,20,16">
+                        <ItemsControl x:Name="BatchList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource SurfaceBrush}"
+                                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                            CornerRadius="8" Margin="0,0,0,6" Padding="12,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="{Binding Filename}" Foreground="{StaticResource TextBrush}"
+                                                           FontSize="12" FontWeight="Medium"/>
+                                                <TextBlock Text="{Binding Subtitle}"
+                                                           FontFamily="{StaticResource MonoFont}" FontSize="10"
+                                                           Foreground="{StaticResource TextDimBrush}"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding StatusLabel}"
+                                                       Foreground="{Binding StatusBrush}"
+                                                       FontFamily="{StaticResource MonoFont}" FontSize="11"
+                                                       FontWeight="SemiBold" VerticalAlignment="Center"
+                                                       Margin="12,0,8,0"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding ConfidenceLabel}"
+                                                       Foreground="{StaticResource AccentHBrush}"
+                                                       FontFamily="{StaticResource MonoFont}" FontSize="11"
+                                                       VerticalAlignment="Center" MinWidth="64" TextAlignment="Right"
+                                                       Margin="0,0,8,0"/>
+                                            <StackPanel Grid.Column="3" Orientation="Horizontal">
+                                                <Button Content="View File" Style="{StaticResource GhostButton}"
+                                                        Tag="{Binding}" Click="BatchViewFile_Click"
+                                                        Margin="0,0,4,0" Padding="10,5" FontSize="11"/>
+                                                <Button Content="View Text" Style="{StaticResource GhostButton}"
+                                                        Tag="{Binding}" Click="BatchView_Click"
+                                                        Padding="10,5" FontSize="11"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+
+                <!-- ===== HISTORY PANEL ===== -->
+                <Grid x:Name="HistoryPanel" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                            Padding="20,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="History" FontSize="16" FontWeight="Bold"
+                                       Foreground="{StaticResource TextBrush}" VerticalAlignment="Center"/>
+                            <TextBox Grid.Column="1" x:Name="HistorySearch" Width="240" FontSize="12"
+                                     Margin="16,0,16,0" VerticalAlignment="Center" Padding="10,6"
+                                     HorizontalAlignment="Left"
+                                     TextChanged="HistorySearch_TextChanged"/>
+                            <Button Grid.Column="2" Content="🗑  Clear All" Style="{StaticResource DangerButton}"
+                                    Click="HistoryClearAll_Click" MinWidth="110"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1" Padding="20,8,20,4">
+                        <TextBlock x:Name="HistoryCount" Text="0 entries"
+                                   FontFamily="{StaticResource MonoFont}" FontSize="11"
+                                   Foreground="{StaticResource TextDimBrush}"/>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="20,0,20,16">
+                        <ItemsControl x:Name="HistoryList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource SurfaceBrush}"
+                                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                            CornerRadius="10" Margin="0,0,0,8" Padding="12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border Grid.Column="0" Width="68" Height="68" CornerRadius="6"
+                                                    Background="#FF18181C" Margin="0,0,12,0" ClipToBounds="True">
+                                                <Image Source="{Binding Thumbnail}" Stretch="UniformToFill"/>
+                                            </Border>
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Preview}"
+                                                           Foreground="{StaticResource TextBrush}"
+                                                           FontSize="12" TextTrimming="CharacterEllipsis"
+                                                           TextWrapping="Wrap" MaxHeight="38"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                                    <TextBlock Text="{Binding TimestampLabel}"
+                                                               FontFamily="{StaticResource MonoFont}" FontSize="10"
+                                                               Foreground="{StaticResource TextDimBrush}"/>
+                                                    <TextBlock Text="  •  " Foreground="{StaticResource BorderBrush}" FontSize="10"/>
+                                                    <TextBlock Text="{Binding ConfidenceLabel}"
+                                                               FontFamily="{StaticResource MonoFont}" FontSize="10"
+                                                               Foreground="{StaticResource AccentHBrush}"/>
+                                                    <TextBlock Text="  •  " Foreground="{StaticResource BorderBrush}" FontSize="10"/>
+                                                    <TextBlock Text="{Binding SettingsLabel}"
+                                                               FontFamily="{StaticResource MonoFont}" FontSize="10"
+                                                               Foreground="{StaticResource TextDimBrush}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Content="View" Style="{StaticResource GhostButton}"
+                                                        Tag="{Binding Entry}" Click="HistoryView_Click"
+                                                        Margin="0,0,4,0" Padding="10,5" FontSize="11"/>
+                                                <Button Content="Re-OCR" Style="{StaticResource GhostButton}"
+                                                        Tag="{Binding Entry}" Click="HistoryReOcr_Click"
+                                                        Margin="0,0,4,0" Padding="10,5" FontSize="11"/>
+                                                <Button Content="✕" Style="{StaticResource GhostButton}"
+                                                        Tag="{Binding Entry}" Click="HistoryDelete_Click"
+                                                        Padding="10,5" FontSize="11"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+
+                <!-- ===== SETTINGS PANEL ===== -->
+                <Grid x:Name="SettingsPanel" Visibility="Collapsed">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="28,24" MaxWidth="560" HorizontalAlignment="Left">
+                            <TextBlock Text="Settings" FontSize="18" FontWeight="Bold"
+                                       Foreground="{StaticResource TextBrush}" Margin="0,0,0,20"/>
+
+                            <TextBlock Text="OCR" FontSize="10.5" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextDimBrush}" Margin="0,0,0,8"/>
+
+                            <Border x:Name="AutoEnhanceWrap" Cursor="Hand" Padding="0,4"
+                                    Background="Transparent" MouseDown="AutoEnhanceToggle_MouseDown">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border x:Name="AutoEnhanceSquare" Style="{StaticResource ToggleSquare}"
+                                            VerticalAlignment="Center" Margin="0,0,9,0">
+                                        <TextBlock x:Name="AutoEnhanceCheck" Text="" FontSize="10" FontWeight="Bold"
+                                                   Foreground="White" HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Foreground="{StaticResource TextBrush}" VerticalAlignment="Center"
+                                               Text="Auto-enhance images before OCR"/>
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Text="Upscales small captures to 600 px minimum side and converts to grayscale. Recommended for screen captures and phone photos."
+                                       Foreground="{StaticResource TextDimBrush}" FontSize="11"
+                                       TextWrapping="Wrap" Margin="25,4,0,16"/>
+
+                            <TextBlock Text="Page Layout" FontSize="10.5" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextDimBrush}" Margin="0,0,0,8"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <Button x:Name="PsmAuto"   Content="Auto"          Tag="Auto"
+                                        Style="{StaticResource GhostButton}" Click="Psm_Click"
+                                        Margin="0,0,4,0" Padding="10,5" FontSize="11"/>
+                                <Button x:Name="PsmColumn" Content="Single Column" Tag="SingleColumn"
+                                        Style="{StaticResource GhostButton}" Click="Psm_Click"
+                                        Margin="0,0,4,0" Padding="10,5" FontSize="11"/>
+                                <Button x:Name="PsmBlock"  Content="Single Block"  Tag="SingleBlock"
+                                        Style="{StaticResource GhostButton}" Click="Psm_Click"
+                                        Margin="0,0,4,0" Padding="10,5" FontSize="11"/>
+                                <Button x:Name="PsmSparse" Content="Sparse Text"   Tag="SparseText"
+                                        Style="{StaticResource GhostButton}" Click="Psm_Click"
+                                        Padding="10,5" FontSize="11"/>
+                            </StackPanel>
+                            <TextBlock Foreground="{StaticResource TextDimBrush}" FontSize="11"
+                                       TextWrapping="Wrap" Margin="0,4,0,16">
+                                <Run Text="Auto"/><Run Text=" - default, Tesseract picks. " Foreground="{StaticResource TextDimBrush}"/>
+                                <Run Text="Single Column"/><Run Text=" - best for articles. " Foreground="{StaticResource TextDimBrush}"/>
+                                <Run Text="Single Block"/><Run Text=" - one uniform paragraph. " Foreground="{StaticResource TextDimBrush}"/>
+                                <Run Text="Sparse Text"/><Run Text=" - scattered text, no layout assumption." Foreground="{StaticResource TextDimBrush}"/>
+                            </TextBlock>
+
+                            <TextBlock Text="DEBUG" FontSize="10.5" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextDimBrush}" Margin="0,0,0,8"/>
+
+                            <Border x:Name="DebugToggleWrap" Cursor="Hand" Padding="0,4"
+                                    Background="Transparent" MouseDown="DebugToggle_MouseDown">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border x:Name="DebugToggleSquare" Style="{StaticResource ToggleSquare}"
+                                            VerticalAlignment="Center" Margin="0,0,9,0">
+                                        <TextBlock x:Name="DebugToggleCheck" Text="" FontSize="10" FontWeight="Bold"
+                                                   Foreground="White" HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Foreground="{StaticResource TextBrush}" VerticalAlignment="Center">
+                                        <Run Text="Enable Debug Mode"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Text="Adds a Debug panel to the sidebar showing every capture, OCR call, and error in real time. Useful for troubleshooting low-confidence or empty results."
+                                       Foreground="{StaticResource TextDimBrush}" FontSize="11"
+                                       TextWrapping="Wrap" Margin="25,4,0,0"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+
+                <!-- ===== ABOUT PANEL ===== -->
+                <Grid x:Name="AboutPanel" Visibility="Collapsed">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="28,24" MaxWidth="640" HorizontalAlignment="Left">
+                            <TextBlock Text="About Image 2 Text" FontSize="18" FontWeight="Bold"
+                                       Foreground="{StaticResource TextBrush}" Margin="0,0,0,8"/>
+                            <TextBlock Text="A simple offline OCR tool for Windows. Capture any region of your screen or open an image file and pull out the text inside it."
+                                       TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" Margin="0,0,0,16"/>
+
+                            <TextBlock Text="FEATURES" FontSize="10.5" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextDimBrush}" Margin="0,8,0,6"/>
+                            <StackPanel>
+                                <TextBlock Text="•  Drag-to-select screen capture across all monitors"
+                                           Foreground="{StaticResource TextBrush}" Margin="0,3"/>
+                                <TextBlock Text="•  Image upload (JPG, PNG, BMP, GIF, TIFF)"
+                                           Foreground="{StaticResource TextBrush}" Margin="0,3"/>
+                                <TextBlock Text="•  Offline OCR powered by Tesseract"
+                                           Foreground="{StaticResource TextBrush}" Margin="0,3"/>
+                                <TextBlock Text="•  Copy to clipboard or save as a .txt file"
+                                           Foreground="{StaticResource TextBrush}" Margin="0,3"/>
+                            </StackPanel>
+
+                            <TextBlock Text="CREDITS" FontSize="10.5" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextDimBrush}" Margin="0,20,0,6"/>
+                            <TextBlock Foreground="{StaticResource TextBrush}" TextWrapping="Wrap">
+                                OCR engine:
+                                <Hyperlink NavigateUri="https://github.com/tesseract-ocr/tesseract"
+                                           Foreground="{StaticResource AccentHBrush}"
+                                           RequestNavigate="Hyperlink_RequestNavigate">Tesseract OCR</Hyperlink>
+                                (Apache 2.0)
+                            </TextBlock>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+
+                <!-- ===== DEBUG PANEL ===== -->
+                <Grid x:Name="DebugPanel" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                            Padding="20,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <ToggleButton x:Name="FilterInfo" Style="{StaticResource FilterButton}"
+                                              Content="INFO" Margin="0,0,4,0"
+                                              Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+                                <ToggleButton x:Name="FilterWarn" Style="{StaticResource FilterButton}"
+                                              Content="WARN" Margin="0,0,4,0"
+                                              Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+                                <ToggleButton x:Name="FilterError" Style="{StaticResource FilterButton}"
+                                              Content="ERROR" Margin="0,0,4,0"
+                                              Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+                                <ToggleButton x:Name="FilterEvent" Style="{StaticResource FilterButton}"
+                                              Content="EVENT"
+                                              Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+                            </StackPanel>
+
+                            <TextBox Grid.Column="1" x:Name="DebugSearch" Width="180" FontSize="11"
+                                     Margin="12,0,0,0" VerticalAlignment="Center" Padding="8,5"
+                                     TextChanged="DebugSearch_TextChanged"
+                                     ToolTip="Filter log lines by text"/>
+
+                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Content="Copy All" Style="{StaticResource GhostButton}"
+                                        Click="CopyAllLogs_Click" Margin="0,0,4,0" Padding="10,5" FontSize="11"/>
+
+                                <Grid Margin="0,0,4,0">
+                                    <ToggleButton x:Name="ExportToggle" Style="{StaticResource ExportButton}"
+                                                  Content="Export ↑"/>
+                                    <Popup x:Name="ExportPopup" PlacementTarget="{Binding ElementName=ExportToggle}"
+                                           Placement="Top" StaysOpen="False" AllowsTransparency="True"
+                                           IsOpen="{Binding IsChecked, ElementName=ExportToggle, Mode=TwoWay}">
+                                        <Border Background="{StaticResource Surface2Brush}"
+                                                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                                CornerRadius="10" MinWidth="152" Margin="0,0,0,4">
+                                            <Border.Effect>
+                                                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.5"/>
+                                            </Border.Effect>
+                                            <StackPanel>
+                                                <Button Content="Export as CSV" Style="{StaticResource ExportMenuItem}"
+                                                        Click="ExportCsv_Click"/>
+                                                <Border Height="1" Background="{StaticResource BorderBrush}"/>
+                                                <Button Content="Export as TXT" Style="{StaticResource ExportMenuItem}"
+                                                        Click="ExportTxt_Click"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Popup>
+                                </Grid>
+
+                                <Button Content="Clear" Style="{StaticResource GhostButton}"
+                                        Click="ClearLog_Click" Padding="10,5" FontSize="11"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <ScrollViewer x:Name="DebugLogScroller" Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="DebugLogPanel" Margin="20,12">
+                            <TextBlock x:Name="DebugEmptyHint"
+                                       Text="Debug mode enabled. Logs will appear here in real-time."
+                                       Foreground="{StaticResource TextDimBrush}" FontSize="12"
+                                       HorizontalAlignment="Center" Margin="0,28"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+
+            </Grid>
+        </Grid>
+
+        <!-- ===== GLOBAL FOOTER ===== -->
+        <Border Grid.Row="1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
+                Background="{StaticResource BgBrush}" Padding="20,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" x:Name="StatusText" Text="Ready"
+                           FontFamily="{StaticResource MonoFont}" FontSize="12"
+                           Foreground="{StaticResource TextDimBrush}" VerticalAlignment="Center"/>
+
+                <TextBlock Grid.Column="1" FontSize="12" VerticalAlignment="Center">
+                    <Run Text="Made by" Foreground="{StaticResource TextDimBrush}"/>
+                    <Hyperlink NavigateUri="https://eeriegoesd.com"
+                               Foreground="{StaticResource AccentHBrush}"
+                               TextDecorations="{x:Null}"
+                               RequestNavigate="Hyperlink_RequestNavigate">
+                        <Run Text="EERIE" FontWeight="SemiBold"/>
+                    </Hyperlink>
+                    <Run Text="  |  " Foreground="{StaticResource BorderBrush}"/>
+                    <Hyperlink NavigateUri="https://buymeacoffee.com/eeriegoesd"
+                               Foreground="{StaticResource CoffeeBrush}"
+                               TextDecorations="{x:Null}"
+                               RequestNavigate="Hyperlink_RequestNavigate">
+                        <Run Text="Support This Project" FontWeight="SemiBold"/>
+                    </Hyperlink>
+                    <Run Text="  |  " Foreground="{StaticResource BorderBrush}"/>
+                    <Hyperlink NavigateUri="https://github.com/EerieGoesD/image2text/issues/new?template=bug-report.md"
+                               Foreground="{StaticResource TextDimBrush}"
+                               TextDecorations="{x:Null}"
+                               RequestNavigate="Hyperlink_RequestNavigate">
+                        <Run Text="Report Issue" FontWeight="SemiBold"/>
+                    </Hyperlink>
+                    <Run Text="  |  " Foreground="{StaticResource BorderBrush}"/>
+                    <Hyperlink NavigateUri="https://github.com/EerieGoesD/image2text/discussions"
+                               Foreground="{StaticResource TextDimBrush}"
+                               TextDecorations="{x:Null}"
+                               RequestNavigate="Hyperlink_RequestNavigate">
+                        <Run Text="Feedback" FontWeight="SemiBold"/>
+                    </Hyperlink>
+                    <Run Text="  |  " Foreground="{StaticResource BorderBrush}"/>
+                    <Hyperlink NavigateUri="https://github.com/EerieGoesD/image2text/issues/new?template=feature-request.md"
+                               Foreground="{StaticResource TextDimBrush}"
+                               TextDecorations="{x:Null}"
+                               RequestNavigate="Hyperlink_RequestNavigate">
+                        <Run Text="Suggest Feature" FontWeight="SemiBold"/>
+                    </Hyperlink>
+                </TextBlock>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

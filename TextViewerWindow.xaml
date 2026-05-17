@@ -1,0 +1,77 @@
+<Window x:Class="Image2Text.TextViewerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Extracted Text"
+        Icon="pack://application:,,,/icon.ico"
+        Height="560" Width="760"
+        MinHeight="340" MinWidth="500"
+        Background="{StaticResource BgBrush}"
+        Foreground="{StaticResource TextBrush}"
+        FontFamily="{StaticResource SansFont}"
+        FontSize="13"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                Padding="20,14">
+            <StackPanel>
+                <TextBlock x:Name="HeaderTitle" Text="Extracted Text" FontSize="16" FontWeight="Bold"
+                           Foreground="{StaticResource TextBrush}"/>
+                <TextBlock x:Name="HeaderMeta"
+                           FontFamily="{StaticResource MonoFont}" FontSize="11"
+                           Foreground="{StaticResource TextDimBrush}" Margin="0,2,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Text -->
+        <Border Grid.Row="1" Margin="20,16,20,8" CornerRadius="10"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+            <TextBox x:Name="ResultTextBox" TextWrapping="Wrap" AcceptsReturn="True" IsReadOnly="False"
+                     VerticalScrollBarVisibility="Auto"
+                     Background="Transparent" BorderThickness="0"/>
+        </Border>
+
+        <!-- Actions -->
+        <Border Grid.Row="2" Padding="20,8,20,16">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="📋  Copy" Style="{StaticResource GhostButton}"
+                        Click="Copy_Click" Margin="0,0,8,0" MinWidth="110"/>
+
+                <Grid Margin="0,0,8,0">
+                    <ToggleButton x:Name="SaveToggle" Style="{StaticResource ExportButton}"
+                                  Content="💾  Save ↑" Padding="14,8"/>
+                    <Popup PlacementTarget="{Binding ElementName=SaveToggle}"
+                           Placement="Top" StaysOpen="False" AllowsTransparency="True"
+                           IsOpen="{Binding IsChecked, ElementName=SaveToggle, Mode=TwoWay}">
+                        <Border Background="{StaticResource Surface2Brush}"
+                                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                CornerRadius="10" MinWidth="180" Margin="0,0,0,4">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.5"/>
+                            </Border.Effect>
+                            <StackPanel>
+                                <Button Content="Save as TXT" Style="{StaticResource ExportMenuItem}" Click="SaveTxt_Click"/>
+                                <Border Height="1" Background="{StaticResource BorderBrush}"/>
+                                <Button Content="Save as Markdown" Style="{StaticResource ExportMenuItem}" Click="SaveMd_Click"/>
+                                <Border Height="1" Background="{StaticResource BorderBrush}"/>
+                                <Button Content="Save as JSON (with confidences)" Style="{StaticResource ExportMenuItem}" Click="SaveJson_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+                </Grid>
+
+                <Button Content="Close" Style="{StaticResource GhostButton}"
+                        Click="Close_Click" MinWidth="100"
+                        HorizontalAlignment="Right"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
