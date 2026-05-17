@@ -14,6 +14,23 @@
 # Tesseract language data (downloaded separately, ~22 MB)
 tessdata/*.traineddata
 
+# MSIX packaging build outputs (Image2Text.Package). Only the manifest,
+# images, and build script are source; everything else is generated.
+Image2Text.Package/build/
+Image2Text.Package/AppPackages/
+Image2Text.Package/*.log
+Image2Text.Package/BundleArtifacts/
+Image2Text.Package/bin/
+Image2Text.Package/obj/
+
+# Generated MSIX artifacts anywhere in the tree
+*.appx
+*.msix
+*.msixbundle
+*.msixupload
+*.pri
+*.pfx
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
